@@ -11,22 +11,24 @@ model = YOLO("best.pt")
 # Set up socket to receive video from Raspberry Pi
 HOST = "0.0.0.0"  # Listen on all interfaces
 PORT = 5001  # Matches sender port
+
 server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 server_socket.bind((HOST, PORT))
 server_socket.listen(1)
-print("Waiting for Raspberry Pi connection...")
+print("🎥 Waiting for Raspberry Pi connection...")
+
 conn, addr = server_socket.accept()
-print("Connected by:", addr)
+print("🔗 Connected by:", addr)
 
 # Set up socket to send results back to Raspberry Pi
 PI_HOST = addr[0]  # Raspberry Pi's IP
 PI_PORT = 5002  # Matches receiver port
 pi_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 pi_socket.connect((PI_HOST, PI_PORT))
-print("Connected to Raspberry Pi for sending data.")
+print("📡 Connected to Raspberry Pi for sending data.")
 
 # Camera and object parameters
-KNOWN_HEIGHT = 170  # Average human height in cm
+KNOWN_HEIGHT = 170  # cm (estimated human height)
 FOCAL_LENGTH = 800  # Adjust based on calibration
 
 try:
@@ -35,7 +37,7 @@ try:
         data_size = struct.unpack(">L", conn.recv(4))[0]
         data = b""
 
-        # Receive frame
+        # Receive the entire frame
         while len(data) < data_size:
             packet = conn.recv(4096)
             if not packet:
@@ -51,7 +53,7 @@ try:
             break
 
         # Run YOLO detection
-        results = model.predict(source=frame, show=False)
+        results = model.predict(frame, show=False)
 
         person_found = False
         frame_width = frame.shape[1]
@@ -65,7 +67,7 @@ try:
 
                 # Calculate deviation from center
                 x_deviation = (cx - frame_width / 2) / (frame_width / 2)  # Normalized (-1 to 1)
-                
+
                 # Estimate distance
                 distance = (KNOWN_HEIGHT * FOCAL_LENGTH) / h
 

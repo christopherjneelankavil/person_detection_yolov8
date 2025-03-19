@@ -4,19 +4,21 @@ import struct
 import pickle
 
 # Set up the camera
-cap = cv2.VideoCapture(0)  # Use the Raspberry Pi camera
+cap = cv2.VideoCapture(0)
 
 # Set up socket
-HOST = "192.168.33.30"  # Change to your laptop's IP address
+HOST = "192.168.33.30"  # Laptop's IP
 PORT = 5001  # Port to send video to laptop
+
 client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 client_socket.connect((HOST, PORT))
-print("Connected to Laptop.")
+print("📡 Connected to Laptop.")
 
 try:
     while True:
         ret, frame = cap.read()
         if not ret:
+            print("❌ Camera not capturing frame!")
             break
 
         # Serialize frame
